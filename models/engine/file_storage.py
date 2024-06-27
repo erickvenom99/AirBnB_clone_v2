@@ -2,7 +2,6 @@
 """
 This module defines a class to manage file storage for hbnb clone.
 """
-
 import json
 from models.base_model import BaseModel
 from models.state import State
@@ -11,6 +10,7 @@ from models.user import User
 from models.place import Place
 from models.review import Review
 from models.amenity import Amenity
+
 
 class FileStorage:
     """
@@ -27,22 +27,23 @@ class FileStorage:
             cls (type): Class to filter objects by.
 
         Returns:
-            dict: A dictionary containing matching objects (key: object ID, value: object).
-                  If cls is not provided or doesn't meet the conditions, returns all objects.
+            dict: A dictionary containing matching objects
+                (key: object ID, value: object).
+            If cls is not provided or doesn't meet the conditions,
+                 returns all objects.
         """
         if cls:
             if isinstance(cls, str):
                 cls = globals().get(cls)
             if cls and issubclass(cls, BaseModel):
-                cls_dict = {}
-                for key, value in self.__objects.items():
-                    if isinstance(value, cls):
-                        cls_dict[key] = value
+                cls_dict = {k: v for k,
+                            v in self.__objects.items() if isinstance(v, cls)}
                 return cls_dict
         return FileStorage.__objects
 
     def new(self, obj):
-        """Adds a new object to the storage dictionary"""
+        """Adds a new object to the storage dict
+        3ionary"""
         self.all().update({obj.to_dict()['__class__'] + '.' + obj.id: obj})
 
     def delete(self, obj=None):
@@ -51,11 +52,8 @@ class FileStorage:
             return
         key_del = "{}.{}".format(obj.__class__.__name__, obj.id)
         try:
-            if key_del in self.__objects:
-                del self.__objects[key_del]
-        except KeyboardInterrupt:
-            pass
-        except AttributeError:
+            del FileStorage.__objects[key_del]
+        except (KeyboardInterrupt, AttributeError):
             pass
 
     def save(self):
@@ -81,4 +79,6 @@ class FileStorage:
                 for key, val in temp.items():
                     self.all()[key] = classes[val['__class__']](**val)
         except FileNotFoundError:
+            pass
+        except json.decoder.JSONDecodeError:
             pass
