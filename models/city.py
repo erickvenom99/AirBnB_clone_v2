@@ -9,5 +9,5 @@ class City(BaseModel, Base):
     __tablename__ = 'cities'
     name = Column(String(60), nullable=False)
     state_id = Column(String(128), ForeignKey('state.id'), nullable=False)
-    places = relationship('Place', backref='usera', cascade='all, delete-orphan')
+    places = relationship('Place', backref='cities', cascade='all, delete-orphan')
     
