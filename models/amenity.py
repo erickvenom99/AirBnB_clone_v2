@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from models.base_model import BaseModel, Base
 
 
-class Amenity(BaseModel):
+class Amenity(BaseModel, Base):
     """
         set attribute and relationship
     """

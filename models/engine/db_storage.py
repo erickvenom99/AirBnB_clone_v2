@@ -2,9 +2,8 @@
 """
 Module defines a database engine
 """
-
-from sqlalchemy import create_engine
 from os import getenv
+from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from models.base_model import Base, BaseModel
 from models.state import State
@@ -29,10 +28,11 @@ class DBStorage:
         username = getenv('HBNB_MYSQL_USER')
         password = getenv('HBNB_MYSQL_PWD')
         host = getenv('HBNB_MYSQL_HOST')
-        db_name = getenv('HBNB_MYSQL_DB')
+        db = getenv('HBNB_MYSQL_DB')
 
-        db_url = "msql+mysqldb://{}:{}@{}/{}".format(
-            username, password, host, db_name)
+        db_url = "mysql+mysqldb://{}:{}@{}/{}".format(username,
+                                                     password,
+                                                     host, db)
         self.__engine = create_engine(db_url, pool_pre_ping=True)
 
         if getenv('HBNB_ENV') == 'test':
@@ -53,7 +53,7 @@ class DBStorage:
                 list_object = self.__session.query(cls).all()
         else:
             for sub_class in Base.__subclasses__():
-                list_object.extend(self.session.query(sub_class).all())
+                list_object.extend(self.__session.query(sub_class).all())
         dict_obj = {}
         for obj in list_object:
             key = "{}.{}".format(obj.__class__.__name__, obj.id)
@@ -62,7 +62,7 @@ class DBStorage:
                 dict_obj[key] = obj
             except Exception:
                 pass
-        return dict_obj   
+        return dict_obj
 
     def new(self, obj):
         """
@@ -85,7 +85,7 @@ class DBStorage:
     def reload(self):
         """
         """
-        Base.metadata.creat.all(self.__engine)
+        Base.metadata.create_all(self.__engine)
         db_session = sessionmaker(bind=self.__engine, expire_on_commit=False)
         Session = scoped_session(db_session)
         self.__session = Session()
