@@ -14,8 +14,8 @@ def do_pack():
     """generate tgz"""
     date = datetime.now().strftime("%Y%m%d%H%M%S")
     os.makedirs("versions", exist_ok=True)
-    archive_file = "versions/web_static_{}.tgz".format(date)
-    result_file = local("tar -cvzf {} web_static".format(archive_file))
+    archive_path = "versions/web_static_{}.tgz".format(date)
+    result_file = local("tar -cvzf {} web_static".format(archive_path))
     if result_file.succeeded:
         return archive_file
     else:
@@ -23,20 +23,26 @@ def do_pack():
 
 
 def do_deploy(archive_path):
-    """Distributes an archive to web servers."""
-    if not os.path.isfile(archive_path):
+    """
+    Distributes an archive to web servers.
+    """
+    if not os.path.exists(archive_path):
         return False
+
     try:
+        # Upload the archive to /tmp/ on the remote server
         put(archive_path, '/tmp/')
+        # Extract the archive to the release directory
         file_name = os.path.basename(archive_path).split(".")[0]
-        path = "data/web_static/releases"
-        run('mkdir -p {}{}/'.format(path, file_name))
-        run('tar -xzf /tmp/{} -C {}{}/'.format(file_name, path, file_name))
-        run('rm /tmp/{}'.format(file_name))
-        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, file_name))
-        run('rm -rf {}{}/web_static'.format(path, file_name))
-        run('rm -rf /data/web_static/current')
-        run('ln -s {}/ /data/web_static/current'.format(path, file_name))
+        file_path = f"/data/web_static/releases/{file_name}"
+        run(f'mkdir -p {file_path}')
+        run(f'tar -xzf /tmp/{file_name}.tgz -C {file_path}')
+        # Remove the uploaded archive
+        run(f'rm /tmp/{file_name}.tgz')
+        # Update symbolic links
+        current_path = '/data/web_static/current'
+        run(f'rm -rf {current_path}')
+        run(f'ln -s {file_path} {current_path}')
         return True
     except Exception as e:
         print(e)
